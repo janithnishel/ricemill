@@ -16,31 +16,13 @@ class AuthInjection {
 
   /// Register all auth dependencies
   static Future<void> init() async {
-    // ==================== DATA SOURCES ====================
-
-    // Local Data Source
-    _sl.registerLazySingleton<AuthLocalDataSource>(
-      () => AuthLocalDataSourceImpl(
-        sharedPreferences: _sl<SharedPreferences>(),
-      ),
-    );
-
-    // Remote Data Source
-    _sl.registerLazySingleton<AuthRemoteDataSource>(
-      () => AuthRemoteDataSourceImpl(
-        apiService: _sl<ApiService>(),
-      ),
-    );
-
     // ==================== REPOSITORY ====================
+    // Note: Data sources are registered in main injection_container.dart
+    // Only register feature-specific dependencies here
 
-    _sl.registerLazySingleton<AuthRepository>(
-      () => AuthRepositoryImpl(
-        remoteDataSource: _sl<AuthRemoteDataSource>(),
-        localDataSource: _sl<AuthLocalDataSource>(),
-        networkInfo: _sl<NetworkInfo>(),
-      ),
-    );
+    // AuthRepository is already registered in main container,
+    // but we need a feature-specific one if different implementation needed
+    // For now, we'll use the global one
 
     // ==================== CUBIT ====================
 
