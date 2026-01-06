@@ -45,7 +45,8 @@ class AuthState extends Equatable {
   final String? successMessage;
   final Map<String, String>? fieldErrors;
   final bool rememberMe;
-  final String? savedPhone;
+  final String? savedIdentifier; // Can be email or phone
+  final String? savedPhone; // Keep for backward compatibility
   final String? savedPassword;
   final bool isPasswordVisible;
   final bool isConfirmPasswordVisible;
@@ -61,6 +62,7 @@ class AuthState extends Equatable {
     this.successMessage,
     this.fieldErrors,
     this.rememberMe = false,
+    this.savedIdentifier,
     this.savedPhone,
     this.savedPassword,
     this.isPasswordVisible = false,
@@ -109,6 +111,7 @@ class AuthState extends Equatable {
     String? successMessage,
     Map<String, String>? fieldErrors,
     bool? rememberMe,
+    String? savedIdentifier,
     String? savedPhone,
     String? savedPassword,
     bool? isPasswordVisible,
@@ -127,6 +130,7 @@ class AuthState extends Equatable {
       successMessage: successMessage,
       fieldErrors: clearError ? null : (fieldErrors ?? this.fieldErrors),
       rememberMe: rememberMe ?? this.rememberMe,
+      savedIdentifier: savedIdentifier ?? this.savedIdentifier,
       savedPhone: savedPhone ?? this.savedPhone,
       savedPassword: savedPassword ?? this.savedPassword,
       isPasswordVisible: isPasswordVisible ?? this.isPasswordVisible,
@@ -147,6 +151,7 @@ class AuthState extends Equatable {
         successMessage,
         fieldErrors,
         rememberMe,
+        savedIdentifier,
         savedPhone,
         savedPassword,
         isPasswordVisible,

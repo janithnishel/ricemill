@@ -66,7 +66,7 @@ class AppRouter {
 
   late final GoRouter router = GoRouter(
     navigatorKey: _rootNavigatorKey,
-    initialLocation: RouteNames.splash,
+    initialLocation: RouteNames.splash  ,
     debugLogDiagnostics: true,
     observers: [AppRouteObserver()],
     

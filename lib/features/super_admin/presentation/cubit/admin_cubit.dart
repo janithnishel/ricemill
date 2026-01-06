@@ -2,14 +2,18 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:uuid/uuid.dart';
 import '../../../../data/models/company_model.dart';
+import '../../../../data/datasources/remote/auth_remote_ds.dart';
 // import '../../../../domain/repositories/admin_repository.dart';
 import 'admin_state.dart';
 
 class AdminCubit extends Cubit<AdminState> {
   // final AdminRepository _adminRepository;
+  final AuthRemoteDataSource? _authRemoteDataSource;
   final _uuid = const Uuid();
 
-  AdminCubit() : super(const AdminState());
+  AdminCubit({AuthRemoteDataSource? authRemoteDataSource})
+      : _authRemoteDataSource = authRemoteDataSource,
+        super(const AdminState());
 
   /// Load dashboard data
   Future<void> loadDashboard() async {

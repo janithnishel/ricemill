@@ -1,17 +1,15 @@
 // TODO: Implement AdminRepository and proper dependency injection
 import 'package:get_it/get_it.dart';
 // import '../../domain/repositories/admin_repository.dart';
-// import 'presentation/cubit/admin_cubit.dart';
+import '../../data/datasources/remote/auth_remote_ds.dart';
+import 'presentation/cubit/admin_cubit.dart';
 
 /// Register all super admin feature dependencies
 void initAdminInjection(GetIt sl) {
-  // TODO: Implement proper dependency injection
   // Cubit
-  // sl.registerFactory<AdminCubit>(
-  //   () => AdminCubit(
-  //     adminRepository: sl<AdminRepository>(),
-  //   ),
-  // );
+  sl.registerFactory<AdminCubit>(
+    () => AdminCubit(authRemoteDataSource: sl<AuthRemoteDataSource>()),
+  );
 }
 
 /// Dispose admin feature dependencies if needed

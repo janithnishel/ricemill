@@ -82,14 +82,14 @@ class AuthCubit extends Cubit<AuthState> {
     );
   }
 
-  /// Login with phone and password
+  /// Login with identifier (email or phone) and password
   Future<void> login({
-    required String phone,
+    required String identifier, // Can be email or phone
     required String password,
     bool rememberMe = false,
   }) async {
     // Validate input
-    final fieldErrors = _validateLoginInput(phone, password);
+    final fieldErrors = _validateLoginInput(identifier, password);
     if (fieldErrors.isNotEmpty) {
       emit(state.copyWith(
         loginStatus: LoginStatus.failure,
@@ -103,8 +103,13 @@ class AuthCubit extends Cubit<AuthState> {
       clearError: true,
     ));
 
+    // Determine if identifier is email or phone
+    final loginData = _isEmail(identifier)
+        ? {'email': identifier, 'password': password}
+        : {'phone': identifier, 'password': password};
+
     final result = await _authRepository.login(
-      phone: phone,
+      phone: identifier, // Keep for backward compatibility, but send proper data
       password: password,
       rememberMe: rememberMe,
     );
@@ -128,22 +133,40 @@ class AuthCubit extends Cubit<AuthState> {
           user: user,
           company: company,
           rememberMe: rememberMe,
+          savedIdentifier: identifier, // Save the identifier used for login
           clearError: true,
         ));
       },
     );
   }
 
+  /// Check if string is an email
+  bool _isEmail(String value) {
+    final emailRegex = RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$');
+    return emailRegex.hasMatch(value);
+  }
+
   /// Validate login input
-  Map<String, String> _validateLoginInput(String phone, String password) {
+  Map<String, String> _validateLoginInput(String identifier, String password) {
     final errors = <String, String>{};
 
-    // Validate phone
-    final cleanPhone = phone.replaceAll(RegExp(r'[^\d]'), '');
-    if (cleanPhone.isEmpty) {
-      errors['phone'] = 'Phone number is required';
-    } else if (cleanPhone.length < 9 || cleanPhone.length > 12) {
-      errors['phone'] = 'Invalid phone number';
+    // Validate identifier (email or phone)
+    if (identifier.isEmpty) {
+      errors['identifier'] = 'Email or phone number is required';
+    } else {
+      // Check if it's an email
+      final emailRegex = RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$');
+      final isEmail = emailRegex.hasMatch(identifier);
+
+      if (isEmail) {
+        // Email validation - already done by regex
+      } else {
+        // Phone validation
+        final cleanPhone = identifier.replaceAll(RegExp(r'[^\d]'), '');
+        if (cleanPhone.length < 9 || cleanPhone.length > 12) {
+          errors['identifier'] = 'Invalid phone number format';
+        }
+      }
     }
 
     // Validate password

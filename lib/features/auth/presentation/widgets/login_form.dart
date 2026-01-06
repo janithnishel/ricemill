@@ -9,13 +9,15 @@ import '../../../../core/shared_widgets/custom_text_field.dart';
 
 class LoginForm extends StatelessWidget {
   final GlobalKey<FormState> formKey;
-  final TextEditingController phoneController;
+  final TextEditingController identifierController; // Can be email or phone
   final TextEditingController passwordController;
-  final FocusNode phoneFocusNode;
+  final FocusNode identifierFocusNode;
   final FocusNode passwordFocusNode;
+  final bool isPhoneLogin;
   final bool isPasswordVisible;
   final bool rememberMe;
   final Map<String, String>? fieldErrors;
+  final VoidCallback onToggleLoginType;
   final VoidCallback onTogglePasswordVisibility;
   final ValueChanged<bool> onToggleRememberMe;
   final VoidCallback onLogin;
@@ -24,13 +26,15 @@ class LoginForm extends StatelessWidget {
   const LoginForm({
     super.key,
     required this.formKey,
-    required this.phoneController,
+    required this.identifierController,
     required this.passwordController,
-    required this.phoneFocusNode,
+    required this.identifierFocusNode,
     required this.passwordFocusNode,
+    required this.isPhoneLogin,
     required this.isPasswordVisible,
     required this.rememberMe,
     this.fieldErrors,
+    required this.onToggleLoginType,
     required this.onTogglePasswordVisibility,
     required this.onToggleRememberMe,
     required this.onLogin,
@@ -44,8 +48,8 @@ class LoginForm extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Phone Field
-          _buildPhoneField(),
+          // Identifier Field (Email or Phone)
+          _buildIdentifierField(),
           const SizedBox(height: 20),
 
           // Password Field
@@ -63,34 +67,61 @@ class LoginForm extends StatelessWidget {
     );
   }
 
-  Widget _buildPhoneField() {
-    return CustomTextField(
-      controller: phoneController,
-      focusNode: phoneFocusNode,
-      label: 'Phone Number',
-      hint: 'Enter your phone number',
-      prefixIcon: Icons.phone_android,
-      keyboardType: TextInputType.phone,
-      textInputAction: TextInputAction.next,
-      errorText: fieldErrors?['phone'],
-      inputFormatters: [
-        FilteringTextInputFormatter.digitsOnly,
-        LengthLimitingTextInputFormatter(10),
-        _PhoneNumberFormatter(),
+  Widget _buildIdentifierField() {
+    return Column(
+      children: [
+        CustomTextField(
+          controller: identifierController,
+          focusNode: identifierFocusNode,
+          label: isPhoneLogin ? 'Phone Number' : 'Email',
+          hint: isPhoneLogin ? 'Enter your phone number' : 'Enter your email',
+          prefixIcon: isPhoneLogin ? Icons.phone_android : Icons.email,
+          keyboardType: isPhoneLogin ? TextInputType.phone : TextInputType.emailAddress,
+          textInputAction: TextInputAction.next,
+          errorText: fieldErrors?['identifier'],
+          inputFormatters: isPhoneLogin ? [
+            LengthLimitingTextInputFormatter(12), // Allow country code + phone
+            _PhoneNumberFormatter(),
+          ] : null,
+          validator: (value) {
+            if (value == null || value.isEmpty) {
+              return isPhoneLogin ? 'Phone number is required' : 'Email is required';
+            }
+
+            if (isPhoneLogin) {
+              final cleanPhone = value.replaceAll(RegExp(r'[^\d]'), '');
+              if (cleanPhone.length < 9) {
+                return 'Enter a valid phone number';
+              }
+            } else {
+              // Email validation
+              final emailRegex = RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$');
+              if (!emailRegex.hasMatch(value)) {
+                return 'Enter a valid email address';
+              }
+            }
+            return null;
+          },
+          onSubmitted: (_) {
+            FocusScope.of(identifierFocusNode.context!).requestFocus(passwordFocusNode);
+          },
+        ),
+        const SizedBox(height: 8),
+        // Toggle between phone and email login
+        Align(
+          alignment: Alignment.centerRight,
+          child: TextButton(
+            onPressed: onToggleLoginType,
+            child: Text(
+              isPhoneLogin ? 'Use Email Instead' : 'Use Phone Instead',
+              style: AppTextStyles.bodySmall.copyWith(
+                color: AppColors.primary,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+        ),
       ],
-      validator: (value) {
-        if (value == null || value.isEmpty) {
-          return 'Phone number is required';
-        }
-        final cleanPhone = value.replaceAll(RegExp(r'[^\d]'), '');
-        if (cleanPhone.length < 9) {
-          return 'Enter a valid phone number';
-        }
-        return null;
-      },
-      onSubmitted: (_) {
-        FocusScope.of(phoneFocusNode.context!).requestFocus(passwordFocusNode);
-      },
     );
   }
 

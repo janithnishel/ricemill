@@ -9,6 +9,7 @@ import '../../../../core/theme/app_dimensions.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/shared_widgets/loading_overlay.dart';
 import '../../../../core/shared_widgets/confirmation_dialog.dart';
+import '../../../../routes/route_names.dart';
 import '../cubit/buy_cubit.dart';
 import '../cubit/buy_state.dart';
 import '../widgets/customer_selector.dart';
@@ -102,7 +103,11 @@ class _BuyScreenState extends State<BuyScreen> {
           } else if (state.hasItems) {
             _showExitConfirmation(context);
           } else {
-            context.pop();
+            if (GoRouter.of(context).canPop()) {
+              context.pop();
+            } else {
+              context.go(RouteNames.home);
+            }
           }
         },
       ),
@@ -840,7 +845,11 @@ class _BuyScreenState extends State<BuyScreen> {
         onConfirm: () {
           Navigator.pop(context);
           context.read<BuyCubit>().resetForNewTransaction();
-          context.pop();
+          if (GoRouter.of(context).canPop()) {
+            context.pop();
+          } else {
+            context.go(RouteNames.home);
+          }
         },
       ),
     );

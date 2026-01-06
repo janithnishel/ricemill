@@ -35,7 +35,7 @@ class AuthRepositoryImpl implements AuthRepository {
 
     try {
       final authResponse = await remoteDataSource.login(
-        phone: phone,
+        identifier: phone,
         password: password,
       );
 

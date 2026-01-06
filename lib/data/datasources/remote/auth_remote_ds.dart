@@ -12,9 +12,9 @@ import '../../models/user_model.dart';
 import '../../models/company_model.dart';
 
 abstract class AuthRemoteDataSource {
-  /// Login with phone and password
+  /// Login with identifier (email or phone) and password
   Future<AuthResponse> login({
-    required String phone,
+    required String identifier, // Can be email or phone
     required String password,
   });
 
@@ -187,18 +187,19 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
 
   @override
   Future<AuthResponse> login({
-    required String phone,
+    required String identifier,
     required String password,
   }) async {
     try {
-      final cleanPhone = phone.replaceAll(RegExp(r'[^\d+]'), '');
+      // Determine if identifier is email or phone
+      final isEmail = RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$').hasMatch(identifier);
+      final cleanIdentifier = identifier.replaceAll(RegExp(r'[^\d+]'), '');
 
       final either = await apiService.post(
         ApiEndpoints.login,
-        data: {
-          'phone': cleanPhone,
-          'password': password,
-        },
+        data: isEmail
+            ? {'email': identifier, 'password': password}
+            : {'phone': cleanIdentifier, 'password': password},
         requiresAuth: false,
       );
 
@@ -306,6 +307,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     try {
       final either = await apiService.post(
         ApiEndpoints.logout,
+        requiresAuth: true, // Logout requires auth token
       );
 
       return either.fold(

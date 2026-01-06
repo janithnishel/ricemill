@@ -211,8 +211,7 @@ class PhoneTextField extends StatelessWidget {
       onChanged: onChanged,
       enabled: enabled,
       inputFormatters: [
-        FilteringTextInputFormatter.digitsOnly,
-        LengthLimitingTextInputFormatter(10),
+        LengthLimitingTextInputFormatter(12), // Allow country code + phone
         _PhoneNumberFormatter(),
       ],
     );

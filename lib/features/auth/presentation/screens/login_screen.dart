@@ -21,10 +21,12 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _phoneController = TextEditingController();
+  final _identifierController = TextEditingController(); // Can be email or phone
   final _passwordController = TextEditingController();
-  final _phoneFocusNode = FocusNode();
+  final _identifierFocusNode = FocusNode();
   final _passwordFocusNode = FocusNode();
+
+  bool _isPhoneLogin = true; // Default to phone login
 
   @override
   void initState() {
@@ -34,8 +36,10 @@ class _LoginScreenState extends State<LoginScreen> {
 
   void _loadSavedCredentials() {
     final state = context.read<AuthCubit>().state;
-    if (state.savedPhone != null) {
-      _phoneController.text = state.savedPhone!;
+    if (state.savedIdentifier != null) {
+      _identifierController.text = state.savedIdentifier!;
+      // Auto-detect if it's email or phone
+      _isPhoneLogin = !state.savedIdentifier!.contains('@');
     }
     if (state.savedPassword != null && state.rememberMe) {
       _passwordController.text = state.savedPassword!;
@@ -44,17 +48,20 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   void dispose() {
-    _phoneController.dispose();
+    _identifierController.dispose();
     _passwordController.dispose();
-    _phoneFocusNode.dispose();
+    _identifierFocusNode.dispose();
     _passwordFocusNode.dispose();
     super.dispose();
   }
 
   void _onLogin() {
     if (_formKey.currentState?.validate() ?? false) {
+      final identifier = _identifierController.text.trim();
+
+      // Use the existing login method - backend will handle email/phone detection
       context.read<AuthCubit>().login(
-            phone: _phoneController.text.trim(),
+            identifier: identifier, // Backend accepts either email or phone here
             password: _passwordController.text,
             rememberMe: context.read<AuthCubit>().state.rememberMe,
           );
@@ -171,13 +178,19 @@ class _LoginScreenState extends State<LoginScreen> {
                     // Login Form
                     LoginForm(
                       formKey: _formKey,
-                      phoneController: _phoneController,
+                      identifierController: _identifierController,
                       passwordController: _passwordController,
-                      phoneFocusNode: _phoneFocusNode,
+                      identifierFocusNode: _identifierFocusNode,
                       passwordFocusNode: _passwordFocusNode,
+                      isPhoneLogin: _isPhoneLogin,
                       isPasswordVisible: state.isPasswordVisible,
                       rememberMe: state.rememberMe,
                       fieldErrors: state.fieldErrors,
+                      onToggleLoginType: () {
+                        setState(() {
+                          _isPhoneLogin = !_isPhoneLogin;
+                        });
+                      },
                       onTogglePasswordVisibility: () {
                         context.read<AuthCubit>().togglePasswordVisibility();
                       },
@@ -278,7 +291,7 @@ class _LoginScreenState extends State<LoginScreen> {
     final otpController = TextEditingController();
     final newPasswordController = TextEditingController();
     final confirmPasswordController = TextEditingController();
-    final phoneNumber = _phoneController.text.trim();
+    final identifier = _identifierController.text.trim();
 
     showDialog(
       context: context,
@@ -298,7 +311,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   children: [
                     if (!isOtpVerified) ...[
                       Text(
-                        'Enter the OTP sent to $phoneNumber',
+                        'Enter the OTP sent to $identifier',
                         style: const TextStyle(color: AppColors.textSecondary),
                       ),
                       const SizedBox(height: 16),
@@ -321,7 +334,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       const SizedBox(height: 8),
                       TextButton(
                         onPressed: () {
-                          context.read<AuthCubit>().resendOtp(phoneNumber);
+                          context.read<AuthCubit>().resendOtp(identifier);
                         },
                         child: const Text('Resend OTP'),
                       ),
@@ -398,12 +411,12 @@ class _LoginScreenState extends State<LoginScreen> {
                       : () {
                           if (!isOtpVerified) {
                             context.read<AuthCubit>().verifyOtp(
-                                  phone: phoneNumber,
+                                  phone: identifier,
                                   otp: otpController.text.trim(),
                                 );
                           } else {
                             context.read<AuthCubit>().resetPassword(
-                                  phone: phoneNumber,
+                                  phone: identifier,
                                   otp: otpController.text.trim(),
                                   newPassword: newPasswordController.text,
                                   confirmPassword:

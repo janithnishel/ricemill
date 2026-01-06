@@ -11,6 +11,7 @@ import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/shared_widgets/confirmation_dialog.dart';
 import '../../../../core/shared_widgets/loading_overlay.dart';
 import '../../../../core/constants/enums.dart';
+import '../../../../routes/route_names.dart';
 import '../../../../data/models/customer_model.dart';
 import '../../../../domain/entities/customer_entity.dart';
 import '../cubit/customers_cubit.dart';
@@ -57,7 +58,11 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen>
       listener: (context, state) {
         if (state.formStatus == CustomerFormStatus.success) {
           if (state.formSuccessMessage?.contains('deleted') == true) {
-            context.pop();
+            if (GoRouter.of(context).canPop()) {
+              context.pop();
+            } else {
+              context.go(RouteNames.customers);
+            }
           }
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -95,7 +100,13 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen>
                   ),
                   const SizedBox(height: 24),
                   ElevatedButton(
-                    onPressed: () => context.pop(),
+                    onPressed: () {
+                      if (GoRouter.of(context).canPop()) {
+                        context.pop();
+                      } else {
+                        context.go(RouteNames.customers);
+                      }
+                    },
                     child: const Text('Go Back'),
                   ),
                 ],

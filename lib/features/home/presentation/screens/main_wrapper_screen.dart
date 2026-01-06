@@ -51,16 +51,23 @@ class _MainWrapperScreenState extends State<MainWrapperScreen> {
           context.go('/login');
         }
       },
-      child: Scaffold(
-        body: widget.navigationShell,
-        bottomNavigationBar: _buildBottomNavigationBar(),
-        floatingActionButton: _buildSyncFab(),
-        floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+      child: BlocBuilder<AuthCubit, AuthState>(
+        buildWhen: (previous, current) => previous.user != current.user,
+        builder: (context, authState) {
+          final isSuperAdmin = authState.user?.isSuperAdmin ?? false;
+
+          return Scaffold(
+            body: widget.navigationShell,
+            bottomNavigationBar: isSuperAdmin ? _buildBottomNavigationBar(isSuperAdmin) : null,
+            floatingActionButton: isSuperAdmin ? null : _buildSyncFab(),
+            floatingActionButtonLocation: isSuperAdmin ? null : FloatingActionButtonLocation.centerDocked,
+          );
+        },
       ),
     );
   }
 
-  Widget _buildBottomNavigationBar() {
+  Widget _buildBottomNavigationBar(bool isSuperAdmin) {
     return BlocBuilder<DashboardCubit, DashboardState>(
       buildWhen: (previous, current) =>
           previous.isSynced != current.isSynced ||
@@ -95,7 +102,7 @@ class _MainWrapperScreenState extends State<MainWrapperScreen> {
                     activeIcon: Icons.inventory_2,
                     label: 'Stock',
                   ),
-                  const SizedBox(width: 56), // Space for FAB
+                  if (!isSuperAdmin) const SizedBox(width: 56), // Space for FAB only for company users
                   _buildNavItem(
                     index: 2,
                     icon: Icons.bar_chart_outlined,

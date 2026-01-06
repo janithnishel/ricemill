@@ -5,6 +5,26 @@ enum AdminStatus { initial, loading, loaded, creating, updating, deleting, succe
 
 enum CompanyFilter { all, active, inactive, pending }
 
+/// Admin credentials for newly created company admin
+class AdminCredentials extends Equatable {
+  final String email;
+  final String phone;
+  final String password;
+  final String name;
+  final String role;
+
+  const AdminCredentials({
+    required this.email,
+    required this.phone,
+    required this.password,
+    required this.name,
+    required this.role,
+  });
+
+  @override
+  List<Object?> get props => [email, phone, password, name, role];
+}
+
 class AdminState extends Equatable {
   final AdminStatus status;
   final List<CompanyModel> allCompanies;
@@ -16,6 +36,7 @@ class AdminState extends Equatable {
   final String? errorMessage;
   final String? successMessage;
   final bool isRefreshing;
+  final AdminCredentials? lastCreatedAdminCredentials;
 
   const AdminState({
     this.status = AdminStatus.initial,
@@ -28,6 +49,7 @@ class AdminState extends Equatable {
     this.errorMessage,
     this.successMessage,
     this.isRefreshing = false,
+    this.lastCreatedAdminCredentials,
   });
 
   // Computed properties
@@ -47,6 +69,7 @@ class AdminState extends Equatable {
     String? errorMessage,
     String? successMessage,
     bool? isRefreshing,
+    AdminCredentials? lastCreatedAdminCredentials,
     bool clearSelectedCompany = false,
     bool clearMessages = false,
   }) {
@@ -61,6 +84,7 @@ class AdminState extends Equatable {
       errorMessage: clearMessages ? null : errorMessage,
       successMessage: clearMessages ? null : successMessage,
       isRefreshing: isRefreshing ?? this.isRefreshing,
+      lastCreatedAdminCredentials: lastCreatedAdminCredentials ?? this.lastCreatedAdminCredentials,
     );
   }
 
@@ -76,6 +100,7 @@ class AdminState extends Equatable {
         errorMessage,
         successMessage,
         isRefreshing,
+        lastCreatedAdminCredentials,
       ];
 }
 

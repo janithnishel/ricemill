@@ -85,14 +85,21 @@ class _AddCompanyScreenState extends State<AddCompanyScreen> {
       body: BlocConsumer<AdminCubit, AdminState>(
         listener: (context, state) {
           if (state.status == AdminStatus.success && state.successMessage != null) {
+            // Show success message
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(state.successMessage!),
                 backgroundColor: AppColors.success,
               ),
             );
-            context.read<AdminCubit>().clearMessages();
-            context.pop();
+
+            // Show admin credentials dialog if available
+            if (state.lastCreatedAdminCredentials != null) {
+              _showAdminCredentialsDialog(context, state.lastCreatedAdminCredentials!);
+            } else {
+              context.read<AdminCubit>().clearMessages();
+              context.pop();
+            }
           }
           if (state.errorMessage != null) {
             ScaffoldMessenger.of(context).showSnackBar(
@@ -492,5 +499,145 @@ class _AddCompanyScreenState extends State<AddCompanyScreen> {
     );
 
     context.read<AdminCubit>().updateCompany(updatedCompany);
+  }
+
+  void _showAdminCredentialsDialog(BuildContext context, AdminCredentials credentials) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppDimensions.radiusL),
+        ),
+        title: Row(
+          children: [
+            Icon(Icons.check_circle, color: AppColors.success),
+            const SizedBox(width: 12),
+            const Text('Company Created Successfully'),
+          ],
+        ),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Please share these login credentials with the company admin:',
+                style: AppTextStyles.bodyMedium,
+              ),
+              const SizedBox(height: AppDimensions.paddingM),
+
+              // Credentials Card
+              Container(
+                padding: const EdgeInsets.all(AppDimensions.paddingM),
+                decoration: BoxDecoration(
+                  color: AppColors.surface,
+                  borderRadius: BorderRadius.circular(AppDimensions.radiusM),
+                  border: Border.all(color: AppColors.border),
+                ),
+                child: Column(
+                  children: [
+                    _buildCredentialRow('Name', credentials.name),
+                    const Divider(height: 16),
+                    _buildCredentialRow('Email', credentials.email),
+                    const Divider(height: 16),
+                    _buildCredentialRow('Phone', credentials.phone),
+                    const Divider(height: 16),
+                    _buildCredentialRow('Password', credentials.password),
+                    const Divider(height: 16),
+                    _buildCredentialRow('Role', credentials.role),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: AppDimensions.paddingM),
+              Container(
+                padding: const EdgeInsets.all(AppDimensions.paddingS),
+                decoration: BoxDecoration(
+                  color: Colors.orange.withAlpha(26),
+                  borderRadius: BorderRadius.circular(AppDimensions.radiusS),
+                  border: Border.all(color: Colors.orange.withAlpha(77)),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.warning_amber, size: 20, color: Colors.orange),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Please save these credentials securely. They will not be shown again.',
+                        style: AppTextStyles.bodySmall.copyWith(color: Colors.orange.shade800),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(dialogContext).pop();
+              context.read<AdminCubit>().clearMessages();
+              context.pop();
+            },
+            child: const Text('Done'),
+          ),
+          ElevatedButton.icon(
+            onPressed: () {
+              // Copy all credentials to clipboard
+              final credentialsText = '''
+Company Admin Credentials:
+
+Name: ${credentials.name}
+Email: ${credentials.email}
+Phone: ${credentials.phone}
+Password: ${credentials.password}
+Role: ${credentials.role}
+
+Please share these credentials with the company admin securely.
+''';
+              Clipboard.setData(ClipboardData(text: credentialsText));
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Credentials copied to clipboard'),
+                  backgroundColor: AppColors.success,
+                ),
+              );
+            },
+            icon: const Icon(Icons.copy),
+            label: const Text('Copy All'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCredentialRow(String label, String value) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          label,
+          style: AppTextStyles.bodyMedium.copyWith(
+            fontWeight: FontWeight.w500,
+            color: AppColors.textSecondary,
+          ),
+        ),
+        Flexible(
+          child: Text(
+            value,
+            style: AppTextStyles.bodyMedium.copyWith(
+              fontWeight: FontWeight.w600,
+              color: AppColors.textPrimary,
+            ),
+            textAlign: TextAlign.right,
+          ),
+        ),
+      ],
+    );
   }
 }

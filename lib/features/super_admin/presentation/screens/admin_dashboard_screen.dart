@@ -6,6 +6,7 @@ import '../../../../core/theme/app_dimensions.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/shared_widgets/loading_overlay.dart';
 import '../../../../data/models/company_model.dart';
+import '../../../auth/presentation/cubit/auth_cubit.dart';
 import '../cubit/admin_cubit.dart';
 import '../cubit/admin_state.dart';
 import '../widgets/company_card.dart';
@@ -506,9 +507,16 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
             child: const Text('Cancel'),
           ),
           ElevatedButton(
-            onPressed: () {
+            onPressed: () async {
               Navigator.pop(context);
-              context.go('/login');
+              // Call the AuthCubit logout method to properly clear session
+              await context.read<AuthCubit>().logout();
+              // Navigate to login screen using microtask to avoid context issues
+              Future.microtask(() {
+                if (mounted) {
+                  context.go('/login');
+                }
+              });
             },
             style: ElevatedButton.styleFrom(backgroundColor: AppColors.error),
             child: const Text('Logout', style: TextStyle(color: Colors.white)),
